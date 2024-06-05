@@ -1,0 +1,21 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - pip3 install awscli --upgrade --user
+      - pip3 install jupyter --upgrade
+  build:
+    commands:
+      - echo Build started on `date`
+      - |
+        ipynb_files=$(git ls-tree --name-only -r $CODEBUILD_RESOLVED_SOURCE_VERSION | grep '\.ipynb$')
+        echo "Jupyter Notebook files in this commit:"
+        echo "$ipynb_files"
+        python build.py "$ipynb_files" $JobInfoTableName
+        if [ $? -ne 0 ]; then
+          echo "Errors found during notebook validation. Check the output for details."
+          exit 1
+        fi
+  post_build:
+    commands:
+      - echo Build completed on `date`
