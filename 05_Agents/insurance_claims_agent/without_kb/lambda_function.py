@@ -5,46 +5,47 @@ import json
 
 
 def get_named_parameter(event, name):
-    return next(item for item in event['parameters'] if item['name'] == name)['value']
+    return next(item for item in event["parameters"] if item["name"] == name)["value"]
 
 
 def get_named_property(event, name):
     return next(
-        item for item in
-        event['requestBody']['content']['application/json']['properties']
-        if item['name'] == name)['value']
+        item
+        for item in event["requestBody"]["content"]["application/json"]["properties"]
+        if item["name"] == name
+    )["value"]
 
 
 def claim_detail(payload):
-    claim_id = payload['parameters'][0]['value']
-    if claim_id == 'claim-857':
+    claim_id = payload["parameters"][0]["value"]
+    if claim_id == "claim-857":
         return {
             "response": {
                 "claimId": claim_id,
                 "createdDate": "21-Jul-2023",
                 "lastActivityDate": "25-Jul-2023",
                 "status": "Open",
-                "policyType": "Vehicle"
+                "policyType": "Vehicle",
             }
         }
-    elif claim_id == 'claim-006':
+    elif claim_id == "claim-006":
         return {
             "response": {
                 "claimId": claim_id,
                 "createdDate": "20-May-2023",
                 "lastActivityDate": "23-Jul-2023",
                 "status": "Open",
-                "policyType": "Vehicle"
+                "policyType": "Vehicle",
             }
         }
-    elif claim_id == 'claim-999':
+    elif claim_id == "claim-999":
         return {
             "response": {
                 "claimId": claim_id,
                 "createdDate": "10-Jan-2023",
                 "lastActivityDate": "31-Feb-2023",
                 "status": "Completed",
-                "policyType": "Disability"
+                "policyType": "Disability",
             }
         }
     else:
@@ -54,7 +55,7 @@ def claim_detail(payload):
                 "createdDate": "18-Apr-2023",
                 "lastActivityDate": "20-Apr-2023",
                 "status": "Open",
-                "policyType": "Vehicle"
+                "policyType": "Vehicle",
             }
         }
 
@@ -65,18 +66,18 @@ def open_claims():
             {
                 "claimId": "claim-006",
                 "policyHolderId": "A945684",
-                "claimStatus": "Open"
+                "claimStatus": "Open",
             },
             {
                 "claimId": "claim-857",
                 "policyHolderId": "A645987",
-                "claimStatus": "Open"
+                "claimStatus": "Open",
             },
             {
                 "claimId": "claim-334",
                 "policyHolderId": "A987654",
-                "claimStatus": "Open"
-            }
+                "claimStatus": "Open",
+            },
         ]
     }
 
@@ -85,22 +86,12 @@ def outstanding_paperwork(parameters):
     for parameter in parameters:
         if parameter.get("value", None) == "claim-857":
             return {
-                "response": {
-                    "pendingDocuments": "DriverLicense, VehicleRegistration"
-                }
+                "response": {"pendingDocuments": "DriverLicense, VehicleRegistration"}
             }
         elif parameter.get("value", None) == "claim-006":
-            return {
-                "response": {
-                    "pendingDocuments": "AccidentImages"
-                }
-            }
+            return {"response": {"pendingDocuments": "AccidentImages"}}
         else:
-            return {
-                "response": {
-                    "pendingDocuments": ""
-                }
-            }
+            return {"response": {"pendingDocuments": ""}}
 
 
 def send_reminder(payload):
@@ -108,40 +99,36 @@ def send_reminder(payload):
     return {
         "response": {
             "sendReminderTrackingId": "50e8400-e29b-41d4-a716-446655440000",
-            "sendReminderStatus": "InProgress"
+            "sendReminderStatus": "InProgress",
         }
     }
 
 
 def lambda_handler(event, context):
-    action = event['actionGroup']
-    api_path = event['apiPath']
+    action = event["actionGroup"]
+    api_path = event["apiPath"]
 
-    if api_path == '/open-items':
+    if api_path == "/open-items":
         body = open_claims()
-    elif api_path == '/open-items/{claimId}/outstanding-paperwork':
-        parameters = event['parameters']
+    elif api_path == "/open-items/{claimId}/outstanding-paperwork":
+        parameters = event["parameters"]
         body = outstanding_paperwork(parameters)
-    elif api_path == '/open-items/{claimId}/detail':
+    elif api_path == "/open-items/{claimId}/detail":
         body = claim_detail(event)
-    elif api_path == '/notify':
+    elif api_path == "/notify":
         body = send_reminder(event)
     else:
         body = {"{}::{} is not a valid api, try another one.".format(action, api_path)}
 
-    response_body = {
-        'application/json': {
-            'body': str(body)
-        }
-    }
+    response_body = {"application/json": {"body": str(body)}}
 
     action_response = {
-        'actionGroup': event['actionGroup'],
-        'apiPath': event['apiPath'],
-        'httpMethod': event['httpMethod'],
-        'httpStatusCode': 200,
-        'responseBody': response_body
+        "actionGroup": event["actionGroup"],
+        "apiPath": event["apiPath"],
+        "httpMethod": event["httpMethod"],
+        "httpStatusCode": 200,
+        "responseBody": response_body,
     }
 
-    response = {'response': action_response}
+    response = {"response": action_response}
     return response
