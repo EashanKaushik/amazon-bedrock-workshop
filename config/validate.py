@@ -156,7 +156,12 @@ EOF
                 raise
 
     def validate_notebook(self):
-
+        commands_lifecycle_config = list()
+        
+        if "commands_lifecycle_config" in self.file_config:
+            commands_lifecycle_config.extend(
+                self.file_config["commands_lifecycle_config"]
+            )
         # if "copy_artifacts_to_s3" in self.file_config:
         #     for copy_artifacats in self.file_config["copy_artifacts_to_s3"]:
         #         self.upload_to_s3(
@@ -176,7 +181,7 @@ EOF
         if (
             self.upload_to_s3(self.local_filepath, self.notebook_file_name)
             and self.create_lifecycle_config(
-                commands_lifecycle_config=self.file_config["commands_lifecycle_config"]
+                commands_lifecycle_config=commands_lifecycle_config
             )
             and self.create_notebook_instance()
             and self.wait_for_instance()
