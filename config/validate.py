@@ -5,11 +5,22 @@ import sys
 
 
 class ValidateNotebook:
-    def __init__(self, bucket_name, role_arn, local_filepath, revision_id) -> None:
+    def __init__(
+        self,
+        bucket_name,
+        role_arn,
+        local_filepath,
+        file_config,
+        notebook_config,
+        revision_id,
+    ) -> None:
         self.bucket_name = bucket_name
         self.role_arn = role_arn
+        self.file_config = file_config
         self.local_filepath = local_filepath
+        self.notebook_config = notebook_config
         self.revision_id = revision_id
+
         self.notebook_file_name = "run.ipynb"
         self.lifecycle_config_name = revision_id
         self.notebook_instance_name = revision_id
@@ -19,20 +30,20 @@ class ValidateNotebook:
         self.s3_client = boto3.client("s3")
         self.sagemaker_client = boto3.client("sagemaker")
 
-    def upload_notebook_to_s3(self):
+    def upload_to_s3(self, local_filepath, bucket_filename):
         try:
             self.s3_client.upload_file(
-                self.local_filepath,
+                local_filepath,
                 self.bucket_name,
-                f"notebooks/{self.revision_id}/{self.local_filepath.split('.')[0]}/{self.notebook_file_name}",
+                f"notebooks/{self.revision_id}/{self.local_filepath.split('.')[0]}/{bucket_filename}",
             )
         except Exception as ex:
-            self.create_error_log(f"Failed to upload notebook to S3. {ex}")
+            self.create_error_log(
+                f"Failed to upload file {local_filepath} to S3. \n\n {ex}"
+            )
             return False
         else:
-            print(
-                f"Notebook {self.local_filepath} uploaded to S3 bucket {self.bucket_name}."
-            )
+            print(f"File {local_filepath} uploaded to S3 bucket.")
             return True
 
     def create_error_log(self, error_message):
@@ -56,18 +67,25 @@ class ValidateNotebook:
             print(f"Notebook instance {self.notebook_instance_name} created.")
             return True
 
-    def create_lifecycle_config(self):
+    def create_lifecycle_config(self, commands_lifecycle_config):
+
+        if commands_lifecycle_config:
+            commands = "\n".join(commands_lifecycle_config)
+        else:
+            commands = ""
         lifecycle_script = f"""#!/bin/bash
 set -e
 
 BUCKET_NAME={self.bucket_name}
-S3_NOTEBOOK_PATH=notebooks/{self.revision_id}/{self.local_filepath.split('.')[0]}/{self.notebook_file_name}
+REVISION_ID={self.revision_id}
+S3_NOTEBOOK_PATH=notebooks/$REVISION_ID/{self.local_filepath.split('.')[0]}/{self.notebook_file_name}
 DEST_PATH=/home/ec2-user/SageMaker
 NOTEBOOK_FULL_PATH=$DEST_PATH/{self.notebook_file_name}
 OUTPUT_NOTEBOOK=$DEST_PATH/output-{self.notebook_file_name}
 
 sudo -u ec2-user -i <<EOF
 aws s3 cp s3://$BUCKET_NAME/$S3_NOTEBOOK_PATH $DEST_PATH/
+{commands}
 jupyter nbconvert --to notebook --execute --allow-errors --output $OUTPUT_NOTEBOOK $NOTEBOOK_FULL_PATH --ExecutePreprocessor.enabled=True --ExecutePreprocessor.kernel_name=conda_python3
 
 # Check for execution errors
@@ -138,13 +156,35 @@ EOF
                 raise
 
     def validate_notebook(self):
+
+        # if "copy_artifacts_to_s3" in self.file_config:
+        #     for copy_artifacats in self.file_config["copy_artifacts_to_s3"]:
+        #         self.upload_to_s3(
+        #             local_filepath=copy_artifacats[
+        #                 "local_filepath"
+        #             ],
+        #             bucket_filename=copy_artifacats[
+        #                 "bucket_filename"
+        #             ],
+        #         )
+
+        # if "notebook_dependency" in self.file_config:
+        #     pass
+        #     TODO: 1. upload artifacts, upload dependent notebook
+        #           2. add commands to lifecycle -> commands_lifecycle_config, command to run dependent notebook
+
         if (
-            self.upload_notebook_to_s3()
-            and self.create_lifecycle_config()
+            self.upload_to_s3(self.local_filepath, self.notebook_file_name)
+            and self.create_lifecycle_config(
+                commands_lifecycle_config=self.file_config["commands_lifecycle_config"]
+            )
             and self.create_notebook_instance()
             and self.wait_for_instance()
         ):
             print("Setup completed.")
+        else:
+            print("Setup failed.")
+            result = False
 
         if self.check_for_errors(
             f"notebooks/{self.revision_id}/{self.local_filepath.split('.')[0]}/error.log"
@@ -154,6 +194,8 @@ EOF
         else:
             print("Notebook executed successfully.")
             result = True
+            # TODO: check if notebook clean
+            # TODO: if notebook_dependency check for notebook_clean
 
         self.delete_lifecycle_config()
         self.delete_notebook_instance()
@@ -191,7 +233,8 @@ if __name__ == "__main__":
         bucket_name=sys.argv[1],
         role_arn=sys.argv[2],
         local_filepath=sys.argv[3],
-        revision_id=sys.argv[4],
+        file_config=sys.argv[4],
+        revision_id=sys.argv[5],
     )
 
     print(validate.validate_notebook())
