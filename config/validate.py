@@ -39,7 +39,7 @@ class ValidateNotebook:
             )
         except Exception as ex:
             self.create_error_log(
-                f"Failed to upload file {local_filepath} to S3. \n\n {ex}"
+                f"Failed to upload file {local_filepath} to S3.\n\n{ex}"
             )
             return False
         else:
@@ -61,7 +61,7 @@ class ValidateNotebook:
                 LifecycleConfigName=self.lifecycle_config_name,
             )
         except Exception as ex:
-            self.create_error_log("Instance failed to create.")
+            self.create_error_log(f"Instance failed to create.\n\n{ex}")
             return False
         else:
             print(f"Notebook instance {self.notebook_instance_name} created.")
@@ -115,7 +115,7 @@ EOF
                 **lifecycle_config
             )
         except Exception as ex:
-            self.create_error_log("Lifecycle config failed to create.")
+            self.create_error_log(f"Lifecycle config failed to create.\n\n{ex}")
             return False
         else:
             print(f"Lifecycle configuration {self.lifecycle_config_name} created.")
@@ -130,14 +130,14 @@ EOF
                 status = response["NotebookInstanceStatus"]
                 print(f"Notebook instance status: {status}")
             except Exception as ex:
-                print(f"Notebook instance status error: {ex}")
+                print(f"Notebook instance status error.\n\n{ex}")
                 return False
 
             if status == "InService":
                 return True
             elif status == "Failed":
-                print("Notebook instance failed to start.")
-                self.create_error_log("Instance created but Lifecycle Config failed")
+                print("Instance created but Lifecycle Config failed to execute.")
+                self.create_error_log(f"Instance created but Lifecycle Config failed to execute.")
                 self.delete_lifecycle_config()
                 self.delete_notebook_instance()
                 return False
