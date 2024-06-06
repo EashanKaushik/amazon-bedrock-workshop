@@ -38,11 +38,12 @@ def create_job():
                 is_valid = ValidateNotebook(
                     bucket_name=S3LogBucketName,
                     role_arn=SageMakerRole,
-                    local_filepath=notebook,
+                    notebook=notebook,
                     file_config=notebook_config[notebook],
                     notebook_config=notebook_config,
                     revision_id=RevisionId,
                 ).validate_notebook()
+                    
                 create_job_info(
                     is_valid=is_valid, notebook=notebook, revision_id=RevisionId
                 )
