@@ -5,7 +5,7 @@ import yaml
 from datetime import datetime
 
 with open("config/notebook_config.yaml", "r") as file:
-    notebook_config = yaml.safe_load(file)
+    notebook_config = yaml.safe_load(file)["OrderNotebook"]
 
 ipynb_files = sys.argv[1].split()
 JobInfoTableName = sys.argv[2]
