@@ -7,7 +7,7 @@ phases:
     commands:
       - echo Build started on `date`
       - |
-        ipynb_files=$(git ls-tree --name-only $CODEBUILD_RESOLVED_SOURCE_VERSION | grep '\.ipynb$')
+        ipynb_files=$(git diff --name-only $CODEBUILD_RESOLVED_SOURCE_VERSION | grep '\.ipynb$')
         echo "Jupyter Notebook files changed in this commit:"
         echo "$ipynb_files"
         python3 config/build.py "$ipynb_files" $JobInfoTableName $S3LogBucketName $SageMakerRole $CODEBUILD_RESOLVED_SOURCE_VERSION
