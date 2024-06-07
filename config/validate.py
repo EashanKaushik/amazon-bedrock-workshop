@@ -265,7 +265,17 @@ EOF
                 commands_lifecycle_config_setup.append(
                     f"jupyter nbconvert --to notebook --execute --allow-errors --output $DEST_PATH/output-{notebook_dependency['bucket_filename']} $DEST_PATH/{notebook_dependency['bucket_filename']} --ExecutePreprocessor.enabled=True --ExecutePreprocessor.kernel_name=conda_python3"
                 )
-
+                commands_lifecycle_config_errors.append(
+                            f"""                                           
+if grep -q '"ename":' $DEST_PATH/output-{notebook_dependency["bucket_filename"]}; then
+    echo "Error found in notebook execution" > $DEST_PATH/{notebook_dependency["bucket_filename"]}-error-exec.log
+    aws s3 cp $DEST_PATH/{notebook_dependency["bucket_filename"]}-error-exec.log s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/error/{notebook_dependency["bucket_filename"]}-error-exec.log
+    aws s3 cp $DEST_PATH/output-{notebook_dependency["bucket_filename"]} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_dependency["bucket_filename"]}
+else
+    echo "No Error found in notebook execution"
+    aws s3 cp $DEST_PATH/output-{notebook_dependency['bucket_filename']} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_dependency["bucket_filename"]}
+fi
+""")
                 if "notebook_clean" in self.notebook_config[self.notebook]:
                     for notebook_clean in self.notebook_config[self.notebook][
                         "notebook_clean"
@@ -288,7 +298,7 @@ if grep -q '"ename":' $DEST_PATH/output-{notebook_clean["bucket_filename"]}; the
     aws s3 cp $DEST_PATH/output-{notebook_clean["bucket_filename"]} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
 else
     echo "No Error found in notebook execution"
-    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
+    aws s3 cp $DEST_PATH/output-{notebook_clean['bucket_filename']} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
 fi
 """
                         )
