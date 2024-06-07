@@ -4,23 +4,19 @@ import random
 import time
 
 
-suffix = random.randrange(200, 900)
 boto3_session = boto3.session.Session()
 region_name = boto3_session.region_name
 iam_client = boto3_session.client("iam")
 account_number = boto3.client("sts").get_caller_identity().get("Account")
 identity = boto3.client("sts").get_caller_identity()["Arn"]
 
-encryption_policy_name = f"bedrock-sample-rag-sp-{suffix}"
-network_policy_name = f"bedrock-sample-rag-np-{suffix}"
-access_policy_name = f"bedrock-sample-rag-ap-{suffix}"
-bedrock_execution_role_name = f"AmazonBedrockExecutionRoleForKnowledgeBase_{suffix}"
-fm_policy_name = f"AmazonBedrockFoundationModelPolicyForKnowledgeBase_{suffix}"
-s3_policy_name = f"AmazonBedrockS3PolicyForKnowledgeBase_{suffix}"
-oss_policy_name = f"AmazonBedrockOSSPolicyForKnowledgeBase_{suffix}"
 
 
-def create_bedrock_execution_role(bucket_name):
+def create_bedrock_execution_role(bucket_name, suffix):
+    bedrock_execution_role_name = f"AmazonBedrockExecutionRoleForKnowledgeBase_{suffix}"
+    fm_policy_name = f"AmazonBedrockFoundationModelPolicyForKnowledgeBase_{suffix}"
+    s3_policy_name = f"AmazonBedrockS3PolicyForKnowledgeBase_{suffix}"
+
     foundation_model_policy_document = {
         "Version": "2012-10-17",
         "Statement": [
@@ -100,8 +96,10 @@ def create_bedrock_execution_role(bucket_name):
 
 
 def create_oss_policy_attach_bedrock_execution_role(
-    collection_id, bedrock_kb_execution_role
+    collection_id, bedrock_kb_execution_role, suffix
 ):
+    oss_policy_name = f"AmazonBedrockOSSPolicyForKnowledgeBase_{suffix}"
+
     # define oss policy document
     oss_policy_document = {
         "Version": "2012-10-17",
@@ -130,8 +128,12 @@ def create_oss_policy_attach_bedrock_execution_role(
 
 
 def create_policies_in_oss(
-    vector_store_name, aoss_client, bedrock_kb_execution_role_arn
+    vector_store_name, aoss_client, bedrock_kb_execution_role_arn, suffix
 ):
+    encryption_policy_name = f"bedrock-sample-rag-sp-{suffix}"
+    network_policy_name = f"bedrock-sample-rag-np-{suffix}"
+    access_policy_name = f"bedrock-sample-rag-ap-{suffix}"
+
     encryption_policy = aoss_client.create_security_policy(
         name=encryption_policy_name,
         policy=json.dumps(
@@ -204,7 +206,12 @@ def create_policies_in_oss(
     return encryption_policy, network_policy, access_policy
 
 
-def delete_iam_role_and_policies():
+def delete_iam_role_and_policies(suffix):
+    bedrock_execution_role_name = f"AmazonBedrockExecutionRoleForKnowledgeBase_{suffix}"
+    fm_policy_name = f"AmazonBedrockFoundationModelPolicyForKnowledgeBase_{suffix}"
+    s3_policy_name = f"AmazonBedrockS3PolicyForKnowledgeBase_{suffix}"
+    oss_policy_name = f"AmazonBedrockOSSPolicyForKnowledgeBase_{suffix}"
+
     fm_policy_arn = f"arn:aws:iam::{account_number}:policy/{fm_policy_name}"
     s3_policy_arn = f"arn:aws:iam::{account_number}:policy/{s3_policy_name}"
     oss_policy_arn = f"arn:aws:iam::{account_number}:policy/{oss_policy_name}"
