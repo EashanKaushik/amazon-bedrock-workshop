@@ -50,7 +50,9 @@ class ValidateNotebook:
     def create_error_log(self, error_message):
         with open("error-setup.log", "w") as f:
             f.write(error_message)
-        s3_key = f"notebooks/{self.revision_id}/{self.notebook_filepath}/error-setup.log"
+        s3_key = (
+            f"notebooks/{self.revision_id}/{self.notebook_filepath}/error-setup.log"
+        )
         self.s3_client.upload_file("error-setup.log", self.bucket_name, s3_key)
 
     def create_notebook_instance(self):
@@ -68,23 +70,28 @@ class ValidateNotebook:
             print(f"Notebook instance {self.notebook_instance_name} created.")
             return True
 
-    def create_lifecycle_config(self, commands_lifecycle_config_setup, commands_lifecycle_config_clean_up, commands_lifecycle_config_errors):
+    def create_lifecycle_config(
+        self,
+        commands_lifecycle_config_setup,
+        commands_lifecycle_config_clean_up,
+        commands_lifecycle_config_errors,
+    ):
 
         if len(commands_lifecycle_config_setup) != 0:
             setup_commands = "\n".join(commands_lifecycle_config_setup)
         else:
             setup_commands = ""
-        
+
         if len(commands_lifecycle_config_clean_up) != 0:
             clean_up_commands = "\n".join(commands_lifecycle_config_clean_up)
         else:
             clean_up_commands = ""
-        
+
         if len(commands_lifecycle_config_errors) != 0:
             error_commands = "\n".join(commands_lifecycle_config_errors)
         else:
             error_commands = ""
-        
+
         lifecycle_script = f"""#!/bin/bash
 set -e
 
@@ -148,7 +155,9 @@ EOF
                 return True
             elif status == "Failed":
                 print("Instance created but Lifecycle Config failed to execute.")
-                self.create_error_log(f"Instance created but Lifecycle Config failed to execute.")
+                self.create_error_log(
+                    f"Instance created but Lifecycle Config failed to execute."
+                )
                 self.delete_lifecycle_config()
                 self.delete_notebook_instance()
                 return False
@@ -165,30 +174,25 @@ EOF
                 return False
             else:
                 raise
-    
-    
+
     def validate_notebook(self):
         commands_lifecycle_config_setup = list()
         commands_lifecycle_config_clean_up = list()
         commands_lifecycle_config_errors = list()
-        
+
         if "commands_lifecycle_config" in self.file_config:
             commands_lifecycle_config_setup.extend(
                 self.file_config["commands_lifecycle_config"]
             )
-            
+
         if "copy_artifacts_to_s3" in self.file_config:
             for copy_artifacats in self.file_config["copy_artifacts_to_s3"]:
                 self.upload_to_s3(
-                    local_filepath=copy_artifacats[
-                        "local_filepath"
-                    ],
-                    bucket_filename=copy_artifacats[
-                        "bucket_filename"
-                    ],
+                    local_filepath=copy_artifacats["local_filepath"],
+                    bucket_filename=copy_artifacats["bucket_filename"],
                 )
                 commands_lifecycle_config_setup.append(
-                    f"aws cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{copy_artifacats["bucket_filename"]} $DEST_PATH/"
+                    f"aws cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{copy_artifacats['bucket_filename']} $DEST_PATH/"
                 )
 
         # if "notebook_dependency" in self.file_config:
@@ -202,20 +206,17 @@ EOF
         if "notebook_clean" in self.file_config:
             for notebook_clean in self.file_config["notebook_clean"]:
                 self.upload_to_s3(
-                    local_filepath=notebook_clean[
-                        "local_filepath"
-                    ],
-                    bucket_filename=notebook_clean[
-                        "bucket_filename"
-                    ],
+                    local_filepath=notebook_clean["local_filepath"],
+                    bucket_filename=notebook_clean["bucket_filename"],
                 )
                 commands_lifecycle_config_setup.append(
-                    f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_clean["bucket_filename"]} $DEST_PATH/"
+                    f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_clean['bucket_filename']} $DEST_PATH/"
                 )
                 commands_lifecycle_config_clean_up.append(
-                    f"jupyter nbconvert --to notebook --execute --allow-errors --output $DEST_PATH/output-{notebook_clean["bucket_filename"]} $DEST_PATH/{notebook_clean["bucket_filename"]} --ExecutePreprocessor.enabled=True --ExecutePreprocessor.kernel_name=conda_python3"
-                    )
-                commands_lifecycle_config_errors.append(f"""                                           
+                    f"jupyter nbconvert --to notebook --execute --allow-errors --output $DEST_PATH/output-{notebook_clean['bucket_filename']} $DEST_PATH/{notebook_clean['bucket_filename']} --ExecutePreprocessor.enabled=True --ExecutePreprocessor.kernel_name=conda_python3"
+                )
+                commands_lifecycle_config_errors.append(
+                    f"""                                           
 if grep -q '"ename":' $DEST_PATH/output-{notebook_clean["bucket_filename"]}; then
     echo "Error found in notebook execution" > $DEST_PATH/{notebook_clean["bucket_filename"]}-error-exec.log
     aws s3 cp $DEST_PATH/{notebook_clean["bucket_filename"]}-error-exec.log s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_clean["bucket_filename"]}-error-exec.log
@@ -227,11 +228,14 @@ fi
 """
                 )
 
-        
         if (
-            self.upload_to_s3(local_filepath=self.notebook, bucket_filename=self.notebook_file_name)
+            self.upload_to_s3(
+                local_filepath=self.notebook, bucket_filename=self.notebook_file_name
+            )
             and self.create_lifecycle_config(
-                commands_lifecycle_config_setup=commands_lifecycle_config_setup, commands_lifecycle_config_clean_up=commands_lifecycle_config_clean_up, commands_lifecycle_config_errors=commands_lifecycle_config_errors
+                commands_lifecycle_config_setup=commands_lifecycle_config_setup,
+                commands_lifecycle_config_clean_up=commands_lifecycle_config_clean_up,
+                commands_lifecycle_config_errors=commands_lifecycle_config_errors,
             )
             and self.create_notebook_instance()
             and self.wait_for_instance()
@@ -249,7 +253,6 @@ fi
         else:
             print("Notebook executed successfully.")
             result = True
-        
 
         self.delete_lifecycle_config()
         self.delete_notebook_instance()
@@ -274,12 +277,12 @@ fi
             # Wait for the Notebook Instance to stop (you can add a loop to check the status)
             waiter = self.sagemaker_client.get_waiter("notebook_instance_stopped")
             waiter.wait(NotebookInstanceName=self.notebook_instance_name)
-            
+
             self.sagemaker_client.delete_notebook_instance(
                 NotebookInstanceName=self.notebook_instance_name
             )
-            
-            waiter = self.sagemaker_client.get_waiter('notebook_instance_deleted')
+
+            waiter = self.sagemaker_client.get_waiter("notebook_instance_deleted")
             waiter.wait(NotebookInstanceName=self.notebook_instance_name)
             print(f"Notebook instance {self.notebook_instance_name} deleted.")
         except Exception as e:

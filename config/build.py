@@ -43,7 +43,7 @@ def create_job():
                     notebook_config=notebook_config,
                     revision_id=RevisionId,
                 ).validate_notebook()
-                    
+
                 create_job_info(
                     is_valid=is_valid, notebook=notebook, revision_id=RevisionId
                 )
