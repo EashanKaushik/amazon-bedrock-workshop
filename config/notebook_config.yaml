@@ -10,7 +10,14 @@ OrderNotebook:
     filepath: 01_Text_generation
     commands_lifecycle_config:
       - 'pip install --no-build-isolation --force-reinstall "boto3>=1.28.57" "awscli>=1.29.57" "botocore>=1.31.57"'
-  
+
+  01_Text_generation/01_code_generation_w_bedrock.ipynb:
+    id: 20
+    filename: 01_code_generation_w_bedrock.ipynb
+    filepath: 01_Text_generation
+    commands_lifecycle_config:
+      - 'pip install --no-build-isolation --force-reinstall "boto3>=1.28.57" "awscli>=1.29.57" "botocore>=1.31.57"'
+
   01_Text_generation/02_text-summarization-titan+claude.ipynb:
     id: 30
     filename: 02_text-summarization-titan+claude.ipynb
