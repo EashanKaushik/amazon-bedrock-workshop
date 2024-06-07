@@ -170,7 +170,7 @@ EOF
 
     def check_for_errors(self):
 
-        error_response = True
+        is_error = False
         continuation_token = None
         try:
             while True:
@@ -189,8 +189,8 @@ EOF
                 for obj in response.get("Contents", []):
                     key = obj["Key"]
                     if "error" in key and self.notebook_file_name in key:
-                        error_response = False
-                        print(f"Found file with 'error' in the name: {key}")
+                        is_error = True
+                        print(f"Found file with 'error' and '{self.notebook_file_name}' in the name: {key}.")
 
                 if "NextContinuationToken" in response:
                     continuation_token = response["NextContinuationToken"]
@@ -198,11 +198,9 @@ EOF
                     break
         except Exception as ex:
             print(f"Error checking for errors.\n\n{ex}")
-            error_response = False
-        finally:
-            error_response = True
+            is_error = True
 
-        return error_response
+        return is_error
         # try:
         #     self.s3_client.head_object(Bucket=self.bucket_name, Key=error_log_file)
         #     print(f"Error log found: {error_log_file}")
@@ -241,9 +239,6 @@ EOF
                     local_filepath=notebook_dependency["local_filepath"],
                     bucket_filename=notebook_dependency["bucket_filename"],
                 )
-                commands_lifecycle_config_setup.append(
-                    f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_dependency['bucket_filename']} $DEST_PATH/"
-                )
 
                 if "commands_lifecycle_config" in self.notebook_config[self.notebook]:
                     commands_lifecycle_config_setup.extend(
@@ -261,6 +256,10 @@ EOF
                         commands_lifecycle_config_setup.append(
                             f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{copy_artifacats['bucket_filename']} $DEST_PATH/"
                         )
+                
+                commands_lifecycle_config_setup.append(
+                    f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_dependency['bucket_filename']} $DEST_PATH/"
+                )
 
                 commands_lifecycle_config_setup.append(
                     f"jupyter nbconvert --to notebook --execute --allow-errors --output $DEST_PATH/output-{notebook_dependency['bucket_filename']} $DEST_PATH/{notebook_dependency['bucket_filename']} --ExecutePreprocessor.enabled=True --ExecutePreprocessor.kernel_name=conda_python3"
@@ -350,11 +349,11 @@ fi
             print("Setup failed.")
             result = False
 
-        if not self.check_for_errors():
-            print("Notebook execution failed. Check the error log in S3 for details.")
+        if self.check_for_errors():
+            print(f"Notebook {self.notebook} execution failed. Check the error log in S3 for details.")
             result = False
         else:
-            print("Notebook executed successfully.")
+            print(f"Notebook {self.notebook} executed successfully.")
             result = True
 
         self.delete_lifecycle_config()
