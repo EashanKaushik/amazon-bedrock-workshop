@@ -2,6 +2,7 @@ import boto3
 import time
 import base64
 import sys
+import uuid 
 
 
 class ValidateNotebook:
@@ -23,8 +24,8 @@ class ValidateNotebook:
 
         self.notebook_filepath = file_config["filepath"]
         self.notebook_file_name = file_config["filename"]
-        self.lifecycle_config_name = "cicd" + str(file_config["id"])
-        self.notebook_instance_name = "cicd" + str(file_config["id"])
+        self.lifecycle_config_name = "cicd" + str(file_config["id"]) + str(uuid.uuid1().hex[:8])
+        self.notebook_instance_name = "cicd" + str(file_config["id"]) + str(uuid.uuid1().hex[:8])
         self.instance_type = "ml.t3.medium"
 
         # Initialize boto3 clients
@@ -212,7 +213,7 @@ EOF
                     bucket_filename=copy_artifacats["bucket_filename"],
                 )
                 commands_lifecycle_config_setup.append(
-                    f"aws cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{copy_artifacats['bucket_filename']} $DEST_PATH/"
+                    f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{copy_artifacats['bucket_filename']} $DEST_PATH/"
                 )
 
         # if "notebook_dependency" in self.file_config:
