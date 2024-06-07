@@ -328,7 +328,7 @@ if grep -q '"ename":' $DEST_PATH/output-{notebook_clean["bucket_filename"]}; the
     aws s3 cp $DEST_PATH/output-{notebook_clean["bucket_filename"]} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
 else
     echo "No Error found in notebook execution"
-    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
+    aws s3 cp $DEST_PATH/output-{notebook_clean["bucket_filename"]} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
 fi
 """
                 )
@@ -350,7 +350,7 @@ fi
             print("Setup failed.")
             result = False
 
-        if self.check_for_errors():
+        if not self.check_for_errors():
             print("Notebook execution failed. Check the error log in S3 for details.")
             result = False
         else:
