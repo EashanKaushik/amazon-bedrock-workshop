@@ -2,7 +2,7 @@ import boto3
 import time
 import base64
 import sys
-import uuid 
+import uuid
 
 
 class ValidateNotebook:
@@ -24,8 +24,12 @@ class ValidateNotebook:
 
         self.notebook_filepath = file_config["filepath"]
         self.notebook_file_name = file_config["filename"]
-        self.lifecycle_config_name = "cicd" + str(file_config["id"]) + str(uuid.uuid1().hex[:8])
-        self.notebook_instance_name = "cicd" + str(file_config["id"]) + str(uuid.uuid1().hex[:8])
+        self.lifecycle_config_name = (
+            "cicd" + str(file_config["id"]) + str(uuid.uuid1().hex[:8])
+        )
+        self.notebook_instance_name = (
+            "cicd" + str(file_config["id"]) + str(uuid.uuid1().hex[:8])
+        )
         self.instance_type = "ml.t3.medium"
 
         # Initialize boto3 clients
@@ -109,11 +113,11 @@ jupyter nbconvert --to notebook --execute --allow-errors --output $OUTPUT_NOTEBO
 {clean_up_commands}
 if grep -q '"ename":' $OUTPUT_NOTEBOOK; then
     echo "Error found in notebook execution" > $DEST_PATH/{self.notebook_file_name}-error-exec.log
-    aws s3 cp $DEST_PATH/{self.notebook_file_name}-error-exec.log s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/{self.notebook_file_name}-error-exec.log
-    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output-{self.notebook_file_name}
+    aws s3 cp $DEST_PATH/{self.notebook_file_name}-error-exec.log s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/error/{self.notebook_file_name}-error-exec.log
+    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{self.notebook_file_name}
 else
     echo "No Error found in notebook execution"
-    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output-{self.notebook_file_name}
+    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{self.notebook_file_name}
 fi
 {error_commands}
 EOF
@@ -165,24 +169,31 @@ EOF
             time.sleep(30)
 
     def check_for_errors(self):
-        
+
         error_response = True
         continuation_token = None
         try:
             while True:
                 if continuation_token:
-                    response = self.s3_client.list_objects_v2(Bucks3_clientet=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}", ContinuationToken=continuation_token)
+                    response = self.s3_client.list_objects_v2(
+                        Bucks3_clientet=self.bucket_name,
+                        Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}",
+                        ContinuationToken=continuation_token,
+                    )
                 else:
-                    response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}")
+                    response = self.s3_client.list_objects_v2(
+                        Bucket=self.bucket_name,
+                        Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}",
+                    )
 
-                for obj in response.get('Contents', []):
-                    key = obj['Key']
-                    if 'error' in key:
+                for obj in response.get("Contents", []):
+                    key = obj["Key"]
+                    if "error" in key:
                         error_response = False
                         print(f"Found file with 'error' in the name: {key}")
 
-                if 'NextContinuationToken' in response:
-                    continuation_token = response['NextContinuationToken']
+                if "NextContinuationToken" in response:
+                    continuation_token = response["NextContinuationToken"]
                 else:
                     break
         except Exception as ex:
@@ -190,7 +201,7 @@ EOF
             error_response = False
         finally:
             error_response = True
-        
+
         return error_response
         # try:
         #     self.s3_client.head_object(Bucket=self.bucket_name, Key=error_log_file)
@@ -223,10 +234,66 @@ EOF
                     f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{copy_artifacats['bucket_filename']} $DEST_PATH/"
                 )
 
-        # if "notebook_dependency" in self.file_config:
-        #     pass
-        #     TODO: 1. upload artifacts, upload dependent notebook
-        #           2. add commands to lifecycle -> commands_lifecycle_config, command to run dependent notebook
+        if "notebook_dependency" in self.file_config:
+
+            for notebook_dependency in self.file_config["notebook_dependency"]:
+                self.upload_to_s3(
+                    local_filepath=notebook_dependency["local_filepath"],
+                    bucket_filename=notebook_dependency["bucket_filename"],
+                )
+                commands_lifecycle_config_setup.append(
+                    f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_dependency['bucket_filename']} $DEST_PATH/"
+                )
+
+                if "commands_lifecycle_config" in self.notebook_config[self.notebook]:
+                    commands_lifecycle_config_setup.extend(
+                        self.notebook_config[self.notebook]["commands_lifecycle_config"]
+                    )
+
+                if "copy_artifacts_to_s3" in self.notebook_config[self.notebook]:
+                    for copy_artifacats in self.notebook_config[self.notebook][
+                        "copy_artifacts_to_s3"
+                    ]:
+                        self.upload_to_s3(
+                            local_filepath=copy_artifacats["local_filepath"],
+                            bucket_filename=copy_artifacats["bucket_filename"],
+                        )
+                        commands_lifecycle_config_setup.append(
+                            f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{copy_artifacats['bucket_filename']} $DEST_PATH/"
+                        )
+
+                commands_lifecycle_config_setup.append(
+                    f"jupyter nbconvert --to notebook --execute --allow-errors --output $DEST_PATH/output-{notebook_dependency['bucket_filename']} $DEST_PATH/{notebook_dependency['bucket_filename']} --ExecutePreprocessor.enabled=True --ExecutePreprocessor.kernel_name=conda_python3"
+                )
+
+                if "notebook_clean" in self.notebook_config[self.notebook]:
+                    for notebook_clean in self.notebook_config[self.notebook][
+                        "notebook_clean"
+                    ]:
+                        self.upload_to_s3(
+                            local_filepath=notebook_clean["local_filepath"],
+                            bucket_filename=notebook_clean["bucket_filename"],
+                        )
+                        commands_lifecycle_config_setup.append(
+                            f"aws s3 cp s3://{self.bucket_name}/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_clean['bucket_filename']} $DEST_PATH/"
+                        )
+                        commands_lifecycle_config_clean_up.append(
+                            f"jupyter nbconvert --to notebook --execute --allow-errors --output $DEST_PATH/output-{notebook_clean['bucket_filename']} $DEST_PATH/{notebook_clean['bucket_filename']} --ExecutePreprocessor.enabled=True --ExecutePreprocessor.kernel_name=conda_python3"
+                        )
+                        commands_lifecycle_config_errors.append(
+                            f"""                                           
+if grep -q '"ename":' $DEST_PATH/output-{notebook_clean["bucket_filename"]}; then
+    echo "Error found in notebook execution" > $DEST_PATH/{notebook_clean["bucket_filename"]}-error-exec.log
+    aws s3 cp $DEST_PATH/{notebook_clean["bucket_filename"]}-error-exec.log s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/error/{notebook_clean["bucket_filename"]}-error-exec.log
+    aws s3 cp $DEST_PATH/output-{notebook_clean["bucket_filename"]} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
+else
+    echo "No Error found in notebook execution"
+    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
+fi
+"""
+                        )
+        # TODO (DONE): 1. upload artifacts, upload dependent notebook
+        # TODO (DONE): 2. add commands to lifecycle -> commands_lifecycle_config, command to run dependent notebook
 
         # TODO: check if notebook clean
         # TODO: if notebook_dependency check for notebook_clean
@@ -247,11 +314,11 @@ EOF
                     f"""                                           
 if grep -q '"ename":' $DEST_PATH/output-{notebook_clean["bucket_filename"]}; then
     echo "Error found in notebook execution" > $DEST_PATH/{notebook_clean["bucket_filename"]}-error-exec.log
-    aws s3 cp $DEST_PATH/{notebook_clean["bucket_filename"]}-error-exec.log s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/{notebook_clean["bucket_filename"]}-error-exec.log
-    aws s3 cp $DEST_PATH/output-{notebook_clean["bucket_filename"]} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output-{notebook_clean["bucket_filename"]}
+    aws s3 cp $DEST_PATH/{notebook_clean["bucket_filename"]}-error-exec.log s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/error/{notebook_clean["bucket_filename"]}-error-exec.log
+    aws s3 cp $DEST_PATH/output-{notebook_clean["bucket_filename"]} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
 else
     echo "No Error found in notebook execution"
-    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output-{self.notebook_file_name}
+    aws s3 cp $OUTPUT_NOTEBOOK s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_clean["bucket_filename"]}
 fi
 """
                 )

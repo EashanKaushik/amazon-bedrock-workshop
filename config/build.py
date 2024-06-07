@@ -22,7 +22,7 @@ def create_job_info(is_valid, notebook, revision_id):
             "notebook_path": notebook,
             "revision_id": revision_id,
             "is_valid": is_valid,
-            "time": datetime.now().strftime('%m/%d/%Y %H:%M:%S'),
+            "time": datetime.now().strftime("%m/%d/%Y %H:%M:%S"),
         }
     )
 
