@@ -275,8 +275,8 @@ fi
             print("Notebook executed successfully.")
             result = True
 
-        # self.delete_lifecycle_config()
-        # self.delete_notebook_instance()
+        self.delete_lifecycle_config()
+        self.delete_notebook_instance()
 
         return result
 
