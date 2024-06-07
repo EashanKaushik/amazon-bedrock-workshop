@@ -133,7 +133,7 @@ OrderNotebook:
         bucket_filename: letters/2022-letter.txt
 
   06_OpenSource_examples/00_Langchain_TextGeneration_examples/05_long-text-summarization-titan Langchain.ipynb:
-    id: 190
+    id: 200
     filename: 05_long-text-summarization-titan Langchain.ipynb
     filepath: 06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples
     copy_artifacts_to_s3: 
