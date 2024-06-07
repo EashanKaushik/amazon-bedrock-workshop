@@ -74,3 +74,17 @@ OrderNotebook:
       - local_filepath: 02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb.ipynb
         bucket_filename: 0_create_ingest_documents_test_kb.ipynb
 
+04_Image_and_Multimodal/bedrock-stable-diffusionXL.ipynb:
+  id: 100
+  filename: bedrock-stable-diffusionXL.ipynb
+  filepath: 04_Image_and_Multimodal
+
+04_Image_and_Multimodal/bedrock-titan-image-generator.ipynb:
+  id: 110
+  filename: bedrock-titan-image-generator.ipynb
+  filepath: 04_Image_and_Multimodal
+
+04_Image_and_Multimodal/bedrock-titan-multimodal-embeddings.ipynb:
+  id: 120
+  filename: bedrock-titan-multimodal-embeddings.ipynb
+  filepath: 04_Image_and_Multimodal
