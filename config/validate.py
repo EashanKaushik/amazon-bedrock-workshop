@@ -23,8 +23,8 @@ class ValidateNotebook:
 
         self.notebook_filepath = file_config["filepath"]
         self.notebook_file_name = file_config["filename"]
-        self.lifecycle_config_name = "cicd" + str(file_config["id"]) + file_config["filename"].replace(".ipynb", "")
-        self.notebook_instance_name = "cicd" + str(file_config["id"]) + file_config["filename"].replace(".ipynb", "")
+        self.lifecycle_config_name = "cicd" + str(file_config["id"])
+        self.notebook_instance_name = "cicd" + str(file_config["id"])
         self.instance_type = "ml.t3.medium"
 
         # Initialize boto3 clients
