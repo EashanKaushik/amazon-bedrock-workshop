@@ -82,17 +82,17 @@ class ValidateNotebook:
         commands_lifecycle_config_errors,
     ):
 
-        if len(commands_lifecycle_config_setup) != 0:
+        if commands_lifecycle_config_setup:
             setup_commands = "\n".join(commands_lifecycle_config_setup)
         else:
             setup_commands = ""
 
-        if len(commands_lifecycle_config_clean_up) != 0:
+        if commands_lifecycle_config_clean_up:
             clean_up_commands = "\n".join(commands_lifecycle_config_clean_up)
         else:
             clean_up_commands = ""
 
-        if len(commands_lifecycle_config_errors) != 0:
+        if commands_lifecycle_config_errors:
             error_commands = "\n".join(commands_lifecycle_config_errors)
         else:
             error_commands = ""

@@ -3,6 +3,7 @@ from boto3.session import Session
 from validate import ValidateNotebook
 import yaml
 from datetime import datetime
+import concurrent.futures
 
 with open("config/notebook_config.yaml", "r") as file:
     notebook_config = yaml.safe_load(file)["OrderNotebook"]
@@ -26,31 +27,36 @@ def create_job_info(is_valid, notebook, revision_id):
         }
     )
 
+def create_parallel_job(notebook):
+    print(f"Validating {notebook}...")
+    is_valid = ValidateNotebook(
+        bucket_name=S3LogBucketName,
+        role_arn=SageMakerRole,
+        notebook=notebook,
+        file_config=notebook_config[notebook],
+        notebook_config=notebook_config,
+        revision_id=RevisionId,
+    ).validate_notebook()
+
+    create_job_info(
+        is_valid=is_valid, notebook=notebook, revision_id=RevisionId
+    )
 
 def create_job():
-    if len(ipynb_files) == 0:
+    if not ipynb_files:
         print("No Notebooks to validate")
     else:
+        executable_notebooks = list()
         for notebook in ipynb_files:
 
             if notebook in notebook_config:
-                print(f"Validating {notebook}...")
-                is_valid = ValidateNotebook(
-                    bucket_name=S3LogBucketName,
-                    role_arn=SageMakerRole,
-                    notebook=notebook,
-                    file_config=notebook_config[notebook],
-                    notebook_config=notebook_config,
-                    revision_id=RevisionId,
-                ).validate_notebook()
-
-                create_job_info(
-                    is_valid=is_valid, notebook=notebook, revision_id=RevisionId
-                )
+                executable_notebooks.append(notebook)
+                
             else:
                 print(f"{notebook} not found in order.yaml")
                 continue
-
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(create_parallel_job, executable_notebook) for executable_notebook in executable_notebooks]
 
 if __name__ == "__main__":
     create_job()
