@@ -49,26 +49,28 @@ OrderNotebook:
     notebook_clean: 
       - local_filepath: 02_KnowledgeBases_and_RAG/4_CLEAN_UP.ipynb
         bucket_filename: 4_CLEAN_UP.ipynb
-  # - id: 70
-  #   filename: 
-  #   filepath: 
-  #   notebook_path: 02_KnowledgeBases_and_RAG/1_managed-rag-kb-retrieve-generate-api.ipynb
-  #   notebook_dependency:
-  #   - 02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb.ipynb
-  # - id: 80
-  #   filename: 
-  #   filepath: 
-
-  #   notebook_path: 02_KnowledgeBases_and_RAG/2_Langchain-rag-retrieve-api-mistral-and-claude-v2.ipynb
-  #   notebook_dependency:
-  #   - 02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb.ipynb
-  # - id: 90
-  #   filename: 
-  #   filepath: 
-  #   notebook_path: 02_KnowledgeBases_and_RAG/3_Langchain-rag-retrieve-api-claude-3.ipynb
-  #   notebook_dependency:
-  #   - 02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb.ipynb
-
-
-
+  
+  02_KnowledgeBases_and_RAG/1_managed-rag-kb-retrieve-generate-api.ipynb:
+    id: 70
+    filename: 1_managed-rag-kb-retrieve-generate-api.ipynb
+    filepath: 02_KnowledgeBases_and_RAG
+    notebook_dependency:
+      - local_filepath: 02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb.ipynb
+        bucket_filename: 0_create_ingest_documents_test_kb.ipynb
+  
+  02_KnowledgeBases_and_RAG/2_Langchain-rag-retrieve-api-mistral-and-claude-v2.ipynb:
+    id: 80
+    filename: 2_Langchain-rag-retrieve-api-mistral-and-claude-v2.ipynb
+    filepath: 02_KnowledgeBases_and_RAG
+    notebook_dependency:
+      - local_filepath: 02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb.ipynb
+        bucket_filename: 0_create_ingest_documents_test_kb.ipynb
+  
+  02_KnowledgeBases_and_RAG/3_Langchain-rag-retrieve-api-claude-3.ipynb:
+    id: 90
+    filename: 3_Langchain-rag-retrieve-api-claude-3.ipynb
+    filepath: 02_KnowledgeBases_and_RAG
+    notebook_dependency:
+      - local_filepath: 02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb.ipynb
+        bucket_filename: 0_create_ingest_documents_test_kb.ipynb
 

@@ -273,9 +273,7 @@ fi
             print("Setup failed.")
             result = False
 
-        if self.check_for_errors(
-            f"notebooks/{self.revision_id}/{self.notebook_filepath}/error.log"
-        ):
+        if self.check_for_errors():
             print("Notebook execution failed. Check the error log in S3 for details.")
             result = False
         else:
