@@ -46,8 +46,6 @@ OrderNotebook:
     copy_artifacts_to_s3: 
       - local_filepath: 02_KnowledgeBases_and_RAG/utility.py
         bucket_filename: utility.py
-    commands_lifecycle_config:
-      - aws cp s3://$BUCKET_NAME/notebooks/$REVISION_ID/02_KnowledgeBases_and_RAG/0_create_ingest_documents_test_kb/utility.py $DEST_PATH/
     notebook_clean: 
       - local_filepath: 02_KnowledgeBases_and_RAG/4_CLEAN_UP.ipynb
         bucket_filename: 4_CLEAN_UP.ipynb

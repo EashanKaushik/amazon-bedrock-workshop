@@ -164,16 +164,36 @@ EOF
             time.sleep(30)
 
     def check_for_errors(self, error_log_file):
-        try:
-            self.s3_client.head_object(Bucket=self.bucket_name, Key=error_log_file)
-            print(f"Error log found: {error_log_file}")
-            return True
-        except self.s3_client.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                print("No errors found in notebook execution.")
-                return False
+        continuation_token = None
+        response = True
+        while True:
+            if continuation_token:
+                response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}", ContinuationToken=continuation_token)
             else:
-                raise
+                response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}")
+
+            for obj in response.get('Contents', []):
+                key = obj['Key']
+                if 'error' in key:
+                    response = False
+                    print(f"Found file with 'error' in the name: {key}")
+
+            if 'NextContinuationToken' in response:
+                continuation_token = response['NextContinuationToken']
+            else:
+                break
+        
+        return response
+        # try:
+        #     self.s3_client.head_object(Bucket=self.bucket_name, Key=error_log_file)
+        #     print(f"Error log found: {error_log_file}")
+        #     return True
+        # except self.s3_client.exceptions.ClientError as e:
+        #     if e.response["Error"]["Code"] == "404":
+        #         print("No errors found in notebook execution.")
+        #         return False
+        #     else:
+        #         raise
 
     def validate_notebook(self):
         commands_lifecycle_config_setup = list()
@@ -254,8 +274,8 @@ fi
             print("Notebook executed successfully.")
             result = True
 
-        self.delete_lifecycle_config()
-        self.delete_notebook_instance()
+        # self.delete_lifecycle_config()
+        # self.delete_notebook_instance()
 
         return result
 
