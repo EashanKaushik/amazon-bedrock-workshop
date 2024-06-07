@@ -164,27 +164,34 @@ EOF
                 return False
             time.sleep(30)
 
-    def check_for_errors(self, error_log_file):
-        continuation_token = None
-        response = True
-        while True:
-            if continuation_token:
-                response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}", ContinuationToken=continuation_token)
-            else:
-                response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}")
-
-            for obj in response.get('Contents', []):
-                key = obj['Key']
-                if 'error' in key:
-                    response = False
-                    print(f"Found file with 'error' in the name: {key}")
-
-            if 'NextContinuationToken' in response:
-                continuation_token = response['NextContinuationToken']
-            else:
-                break
+    def check_for_errors(self):
         
-        return response
+        error_response = True
+        continuation_token = None
+        try:
+            while True:
+                if continuation_token:
+                    response = self.s3_client.list_objects_v2(Bucks3_clientet=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}", ContinuationToken=continuation_token)
+                else:
+                    response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=f"notebooks/{self.revision_id}/{self.notebook_filepath}")
+
+                for obj in response.get('Contents', []):
+                    key = obj['Key']
+                    if 'error' in key:
+                        error_response = False
+                        print(f"Found file with 'error' in the name: {key}")
+
+                if 'NextContinuationToken' in response:
+                    continuation_token = response['NextContinuationToken']
+                else:
+                    break
+        except Exception as ex:
+            print(f"Error checking for errors.\n\n{ex}")
+            error_response = False
+        finally:
+            error_response = True
+        
+        return error_response
         # try:
         #     self.s3_client.head_object(Bucket=self.bucket_name, Key=error_log_file)
         #     print(f"Error log found: {error_log_file}")
