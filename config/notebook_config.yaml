@@ -109,22 +109,22 @@ OrderNotebook:
       - local_filepath: 05_Agents/insurance_claims_agent/without_kb/lambda_function.py
         bucket_filename: lambda_function.py
   
-  06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples/01_zero_shot_generation.ipynb:
+  06_OpenSource_examples/00_Langchain_TextGeneration_examples/01_zero_shot_generation.ipynb:
     id: 160
     filename: 01_zero_shot_generation.ipynb
     filepath: 06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples
 
-  06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples/02_code_interpret_w_langchain.ipynb:
+  06_OpenSource_examples/00_Langchain_TextGeneration_examples/02_code_interpret_w_langchain.ipynb:
     id: 170
     filename: 02_code_interpret_w_langchain.ipynb
     filepath: 06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples
   
-  06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples/03_code_translate_w_langchain.ipynb:
+  06_OpenSource_examples/00_Langchain_TextGeneration_examples/03_code_translate_w_langchain.ipynb:
     id: 180
     filename: 03_code_translate_w_langchain.ipynb
     filepath: 06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples
 
-  06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples/04_long text summarization using LCEL chains on Langchain.ipynb:
+  06_OpenSource_examples/00_Langchain_TextGeneration_examples/04_long text summarization using LCEL chains on Langchain.ipynb:
     id: 190
     filename: 04_long text summarization using LCEL chains on Langchain.ipynb
     filepath: 06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples
@@ -132,7 +132,7 @@ OrderNotebook:
       - local_filepath: 06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples/letters/2022-letter.txt
         bucket_filename: letters/2022-letter.txt
 
-  06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples/05_long-text-summarization-titan Langchain.ipynb:
+  06_OpenSource_examples/00_Langchain_TextGeneration_examples/05_long-text-summarization-titan Langchain.ipynb:
     id: 190
     filename: 05_long-text-summarization-titan Langchain.ipynb
     filepath: 06_OpenSource_examples/00_Langchain_TextGeneration_examples/00_Langchain_TextGeneration_examples
