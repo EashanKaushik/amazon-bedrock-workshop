@@ -188,7 +188,7 @@ EOF
 
                 for obj in response.get("Contents", []):
                     key = obj["Key"]
-                    if "error" in key:
+                    if "error" in key and self.notebook_file_name in key:
                         error_response = False
                         print(f"Found file with 'error' in the name: {key}")
 
