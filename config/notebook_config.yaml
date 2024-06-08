@@ -89,9 +89,9 @@ OrderNotebook:
     filename: bedrock-titan-multimodal-embeddings.ipynb
     filepath: 04_Image_and_Multimodal
 
-  05_Agents/insurance_claims_agent/with_kb/create_and_invoke_agent.ipynb:
+  05_Agents/insurance_claims_agent/with_kb/create_and_invoke_agent_with_kb.ipynb:
     id: 140
-    filename: create_and_invoke_agent.ipynb
+    filename: create_and_invoke_agent_with_kb.ipynb
     filepath: 05_Agents/insurance_claims_agent/with_kb
     copy_artifacts_to_s3: 
       - local_filepath: 05_Agents/insurance_claims_agent/with_kb/05_Agents/insurance_claims_agent/with_kb/insurance_claims_agent_openapi_schema_with_kb.json.json

@@ -240,13 +240,13 @@ EOF
                     bucket_filename=notebook_dependency["bucket_filename"],
                 )
 
-                if "commands_lifecycle_config" in self.notebook_config[self.notebook]:
+                if "commands_lifecycle_config" in self.notebook_config[notebook_dependency]:
                     commands_lifecycle_config_setup.extend(
-                        self.notebook_config[self.notebook]["commands_lifecycle_config"]
+                        self.notebook_config[notebook_dependency]["commands_lifecycle_config"]
                     )
 
-                if "copy_artifacts_to_s3" in self.notebook_config[self.notebook]:
-                    for copy_artifacats in self.notebook_config[self.notebook][
+                if "copy_artifacts_to_s3" in self.notebook_config[notebook_dependency]:
+                    for copy_artifacats in self.notebook_config[notebook_dependency][
                         "copy_artifacts_to_s3"
                     ]:
                         self.upload_to_s3(
@@ -275,8 +275,8 @@ else
     aws s3 cp $DEST_PATH/output-{notebook_dependency['bucket_filename']} s3://$BUCKET_NAME/notebooks/{self.revision_id}/{self.notebook_filepath}/output/{notebook_dependency["bucket_filename"]}
 fi
 """)
-                if "notebook_clean" in self.notebook_config[self.notebook]:
-                    for notebook_clean in self.notebook_config[self.notebook][
+                if "notebook_clean" in self.notebook_config[notebook_dependency]:
+                    for notebook_clean in self.notebook_config[notebook_dependency][
                         "notebook_clean"
                     ]:
                         self.upload_to_s3(
