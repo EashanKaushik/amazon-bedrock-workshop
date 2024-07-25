@@ -6,6 +6,7 @@ phases:
   build:
     commands:
       - echo Build started on `date`
+      - aws s3 cp $ArtifactS3URI config/ --recursive
       - echo "$CODEBUILD_RESOLVED_SOURCE_VERSION"
       - |
         ipynb_files=$(git diff HEAD~ HEAD --stat --name-only | grep '\.ipynb$')
