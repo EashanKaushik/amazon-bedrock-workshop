@@ -16,3 +16,7 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
+      - printf  '{"revision_id":"%s"}' $CODEBUILD_RESOLVED_SOURCE_VERSION > revisionDetail.json
+artifacts:
+  files:
+    - revisionDetail.json
